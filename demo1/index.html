@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#071325" />
+  <title>MathAR — Vision AR</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+
+  <style>
+    :root{
+      --c0:#7dd3ff; --c1:#4aa3ff;
+      --glass: rgba(8, 18, 38, .55);
+      --txt: rgba(255,255,255,.92);
+      --dim: rgba(255,255,255,.62);
+      --radius: 20px;
+      --safeTop: env(safe-area-inset-top, 0px);
+      --safeBottom: env(safe-area-inset-bottom, 0px);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%; background:#050a14; overflow:hidden; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    #stage{position:fixed; inset:0; background:#050a14}
+    video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform: scaleX(-1); }
+    canvas#overlay{position:absolute; inset:0; width:100%; height:100%; pointer-events:auto}
+    .vignette{position:absolute; inset:0; pointer-events:none;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,.45) 100%)}
+    .topbar{
+      position:fixed; top:0; left:0; right:0; z-index:20;
+      padding-top: calc(var(--safeTop) + 12px);
+      padding-bottom: 12px;
+      padding-left: 14px; padding-right: 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background: linear-gradient(180deg, rgba(8,18,38,.78), rgba(8,18,38,.28));
+      backdrop-filter: blur(22px) saturate(155%);
+      -webkit-backdrop-filter: blur(22px) saturate(155%);
+      border-bottom: 1px solid rgba(125,211,255,.14);
+    }
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:999px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.86);
+      text-decoration:none;
+      font-size:13px;font-weight:700;
+      user-select:none;
+    }
+    .btn:active{transform: scale(.98)}
+    .titlebox{flex:1; text-align:center}
+    .title{font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--txt)}
+    .sub{margin-top:2px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(125,211,255,.86)}
+    .status{
+      position:fixed; left:50%; transform: translateX(-50%);
+      top: calc(var(--safeTop) + 72px);
+      z-index:20;
+      padding:10px 12px;border-radius:999px;
+      background: rgba(8,18,38,.55);
+      border: 1px solid rgba(125,211,255,.16);
+      backdrop-filter: blur(22px) saturate(155%);
+      -webkit-backdrop-filter: blur(22px) saturate(155%);
+      color: rgba(255,255,255,.78);
+      font-size:12px;font-weight:700;
+      display:flex;align-items:center;gap:10px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.40);
+      pointer-events:none;
+      max-width: calc(100% - 22px);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;
+         background: radial-gradient(circle, #bff0ff, #4aa3ff);
+         box-shadow: 0 0 18px rgba(125,211,255,.65)}
+    .panel{
+      position:fixed; left:50%; transform: translateX(-50%);
+      bottom: calc(var(--safeBottom) + 14px);
+      z-index:25;
+      width: min(560px, calc(100% - 22px));
+      background: rgba(8,18,38,.62);
+      border: 1px solid rgba(125,211,255,.16);
+      border-radius: 22px;
+      backdrop-filter: blur(26px) saturate(165%);
+      -webkit-backdrop-filter: blur(26px) saturate(165%);
+      box-shadow: 0 28px 64px rgba(0,0,0,.52);
+      overflow:hidden;
+      max-height: 70vh;
+      display:none;
+    }
+    .panel.open{display:block}
+    .ph{
+      padding:14px 14px 10px;
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border-bottom: 1px solid rgba(125,211,255,.12);
+    }
+    .ph .k{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(125,211,255,.88)}
+    .ph .h{margin-top:6px;font-size:16px;font-weight:900;letter-spacing:-.02em;color:var(--txt);line-height:1.15}
+    .x{
+      width:34px;height:34px;border-radius:999px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.82);
+      font-size:18px;font-weight:900;
+      user-select:none;
+    }
+    .x:active{transform: scale(.98)}
+    .pc{padding: 14px;display:grid; gap:12px;}
+    .formula{
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(125,211,255,.10);
+      border: 1px solid rgba(125,211,255,.22);
+    }
+    .fx{
+      font-family: ui-serif, Georgia, "Times New Roman", serif;
+      font-size: 22px;
+      text-align:center;
+      color: rgba(255,255,255,.94);
+      letter-spacing: .04em;
+    }
+    .meta{margin-top:8px;font-size:12px;color:rgba(255,255,255,.60);line-height:1.55}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .tag{
+      padding:8px 10px;border-radius:999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+      color: rgba(255,255,255,.74);
+    }
+    .btn2{
+      width:100%;
+      padding:12px 12px;border-radius:14px;
+      background: rgba(125,211,255,.18);
+      border: 1px solid rgba(125,211,255,.24);
+      color: rgba(255,255,255,.92);
+      font-size:13px;font-weight:900;
+      letter-spacing:.02em;
+    }
+    .btn2:active{transform: scale(.99)}
+    .hint{
+      position:fixed; left:50%; transform: translateX(-50%);
+      bottom: calc(var(--safeBottom) + 96px);
+      z-index:18;
+      width: min(620px, calc(100% - 22px));
+      padding:12px 14px;
+      border-radius: 18px;
+      background: rgba(8,18,38,.45);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(20px) saturate(155%);
+      -webkit-backdrop-filter: blur(20px) saturate(155%);
+      color: rgba(255,255,255,.70);
+      font-size:12px;
+      line-height:1.55;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .hint b{color: rgba(255,255,255,.90)}
+  </style>
+</head>
+
+<body>
+  <div id="stage">
+    <video id="video" playsinline autoplay muted></video>
+    <canvas id="overlay"></canvas>
+    <div class="vignette"></div>
+  </div>
+
+  <div class="topbar">
+    <a class="btn" href="../">← Indietro</a>
+    <div class="titlebox">
+      <div class="title">Vision AR — Oggetti reali</div>
+      <div class="sub">TensorFlow.js COCO-SSD · overlay “liquid”</div>
+    </div>
+    <button class="btn" id="mirrorBtn" type="button">Specchio: ON</button>
+  </div>
+
+  <div class="status" id="status"><span class="dot"></span> Avvio modello…</div>
+
+  <div class="hint" id="hint">
+    <div style="font-size:18px;line-height:1">🔍</div>
+    <div>
+      <b>Questa demo riconosce oggetti reali</b> con un modello ML (COCO-SSD) e propone
+      formule/fenomeni coerenti. Tocca un riquadro per aprire la scheda.
+      <div style="margin-top:6px;color:rgba(255,255,255,.62)">
+        Se non vedi riquadri: più luce e oggetti comuni (sedia, bottiglia, libro, monitor).
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="ph">
+      <div>
+        <div class="k" id="pk">FENOMENO</div>
+        <div class="h" id="ph">Scheda</div>
+      </div>
+      <div class="x" id="closeBtn">×</div>
+    </div>
+    <div class="pc">
+      <div class="formula">
+        <div class="fx" id="pf">—</div>
+        <div class="meta" id="pm">—</div>
+      </div>
+      <div class="row" id="ptags"></div>
+      <button class="btn2" id="copyBtn" type="button">Copia formula</button>
+      <div class="meta" style="color:rgba(255,255,255,.50)">
+        Nota: per misure “metriche” reali (m, cm) serve tracking AR con depth/hit-test; qui forniamo formule e interpretazioni solide.
+      </div>
+    </div>
+  </div>
+
+<script>
+'use strict';
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('overlay');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+const hintEl = document.getElementById('hint');
+const panel = document.getElementById('panel');
+
+const mirrorBtn = document.getElementById('mirrorBtn');
+let mirror = true;
+mirrorBtn.addEventListener('click', () => {
+  mirror = !mirror;
+  video.style.transform = mirror ? 'scaleX(-1)' : 'none';
+  mirrorBtn.textContent = 'Specchio: ' + (mirror ? 'ON' : 'OFF');
+});
+
+function setStatus(msg){
+  statusEl.textContent = ' ' + msg;
+  const dot = document.createElement('span');
+  dot.className='dot';
+  statusEl.prepend(dot);
+}
+
+function resize(){
+  canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+  canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+}
+window.addEventListener('resize', resize);
+resize();
+
+async function startCamera(){
+  const constraints = {
+    audio: false,
+    video: {
+      facingMode: { ideal: 'environment' },
+      width:  { ideal: 1280 },
+      height: { ideal: 720 }
+    }
+  };
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+    await video.play();
+    return true;
+  }catch(e){
+    console.error(e);
+    setStatus('Permesso fotocamera negato');
+    hintEl.innerHTML = '<div style="font-size:18px;line-height:1">📷</div><div><b>Fotocamera bloccata</b><div style="margin-top:6px;color:rgba(255,255,255,.62)">Consenti i permessi al sito e ricarica.</div></div>';
+    return false;
+  }
+}
+
+const CARDS = {
+  chair:{k:'MECCANICA · STATICA',h:'Pressione di contatto (sedia)',f:'p = F / A',m:'Il peso si distribuisce sull’area di contatto: a parità di F, ridurre A aumenta p.',tags:['statica','pressione','Pa']},
+  couch:{k:'MECCANICA · STATICA',h:'Pressione di contatto (divano)',f:'p = F / A',m:'Grande area di contatto → pressione minore: esempio reale di distribuzione del carico.',tags:['statica','carichi']},
+  bottle:{k:'GEOMETRIA · SOLIDI',h:'Cilindro: volume',f:'V = π r² h',m:'Molte bottiglie sono approssimabili a cilindri sul corpo: volume ∝ r².',tags:['volume','cilindro','π']},
+  cup:{k:'GEOMETRIA · SOLIDI',h:'Cilindro (prima appross.)',f:'V = π r² h',m:'Una tazza è spesso un tronco di cono; il cilindro è una stima robusta per capire dipendenze.',tags:['stima','solidi']},
+  book:{k:'GEOMETRIA · SOLIDI',h:'Parallelepipedo: volume',f:'V = a · b · c',m:'Un libro è un parallelepipedo rettangolo: utile per densità e logistica.',tags:['volume','parallelepipedo']},
+  laptop:{k:'FISICA · TERMICA',h:'Calore (modello)',f:'Q = m · c · ΔT',m:'Un laptop dissipa energia in calore. Modello semplificato per leggere riscaldamento.',tags:['termica','energia']},
+  tv:{k:'FISICA · OTTICA',h:'Legge 1/r² (trend)',f:'E ∝ 1 / r²',m:'Per sorgenti puntiformi l’illuminamento decresce come 1/r². Display non puntiforme, ma utile come intuizione.',tags:['ottica','1/r²']},
+  cell_phone:{k:'GEOMETRIA · PIANA',h:'Rettangolo: area schermo',f:'A = b · h',m:'Area: utile per confronti, densità pixel, superfici.',tags:['area','rettangolo']},
+  keyboard:{k:'GEOMETRIA · PIANA',h:'Rettangolo: perimetro',f:'P = 2(b + h)',m:'Perimetro utile in design (bordi, cornici).',tags:['perimetro']},
+  person:{k:'FISICA · BIOMECCANICA',h:'Coppia e stabilità',f:'τ = r × F',m:'La stabilità dipende da baricentro e base d’appoggio. La coppia aumenta con r e F.',tags:['coppia','equilibrio']},
+  dining_table:{k:'MECCANICA · STATICA',h:'Pressione (tavolo)',f:'p = F / A',m:'Il tavolo esercita forza peso sul pavimento distribuita sull’area di contatto delle gambe.',tags:['statica','pressione']}
+};
+const DEFAULT_CARD = {k:'MATEMATICA · MODELLI',h:'Modello geometrico',f:'(scegli un modello)',m:'Oggetti non mappati: scegli un modello (rettangolo, cerchio, cilindro…). In app AR “piena” aggiungeremmo stima metrica via depth.',tags:['stima','modelli']};
+
+let model = null;
+let lastPreds = [];
+let lastTs = 0;
+
+canvas.addEventListener('click', (ev)=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = (ev.clientX - rect.left) * devicePixelRatio;
+  const y = (ev.clientY - rect.top) * devicePixelRatio;
+
+  const hit = lastPreds.find(p => {
+    const [bx,by,bw,bh] = p.bbox;
+    return x>=bx && x<=bx+bw && y>=by && y<=by+bh;
+  });
+  if(hit) openCard(hit);
+});
+
+document.getElementById('closeBtn').addEventListener('click', ()=> panel.classList.remove('open'));
+document.getElementById('copyBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('pf').textContent;
+  try{ await navigator.clipboard.writeText(text); }catch(e){}
+});
+
+function openCard(pred){
+  const cls = pred.class;
+  const card = CARDS[cls] || DEFAULT_CARD;
+  document.getElementById('pk').textContent = card.k;
+  document.getElementById('ph').textContent = card.h + ' · ' + cls;
+  document.getElementById('pf').textContent = card.f;
+  document.getElementById('pm').textContent = card.m;
+
+  const tags = document.getElementById('ptags');
+  tags.innerHTML = '';
+  (card.tags || []).forEach(t=>{
+    const el = document.createElement('div');
+    el.className = 'tag';
+    el.textContent = t;
+    tags.appendChild(el);
+  });
+  panel.classList.add('open');
+}
+
+function roundRect(ctx,x,y,w,h,r,fill,stroke,strokeW){
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+  if(fill){ ctx.fillStyle = fill; ctx.fill(); }
+  if(stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = strokeW; ctx.stroke(); }
+}
+
+function draw(preds){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  if(mirror){ ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
+
+  preds.forEach(p=>{
+    const [x,y,w,h] = p.bbox;
+    const score = p.score;
+    const a = Math.max(.18, Math.min(.85, score));
+    const stroke = `rgba(125,211,255,${0.85*a})`;
+    const fill   = `rgba(125,211,255,${0.10*a})`;
+    const r = 14 * devicePixelRatio;
+    roundRect(ctx, x, y, w, h, r, fill, stroke, 2.2*devicePixelRatio);
+
+    const label = `${p.class} · ${(score*100).toFixed(0)}%`;
+    ctx.font = `${12*devicePixelRatio}px Inter, sans-serif`;
+    ctx.textBaseline = 'top';
+    const tw = ctx.measureText(label).width;
+    const pad = 8*devicePixelRatio;
+    const bx = x;
+    const by = Math.max(0, y - (24*devicePixelRatio));
+    roundRect(ctx, bx, by, tw + pad*2, 20*devicePixelRatio, 10*devicePixelRatio,
+      'rgba(8,18,38,.75)', 'rgba(125,211,255,.25)', 1.2*devicePixelRatio);
+    ctx.fillStyle = 'rgba(255,255,255,.92)';
+    ctx.fillText(label, bx + pad, by + 4*devicePixelRatio);
+  });
+
+  if(mirror) ctx.setTransform(1,0,0,1,0,0);
+}
+
+async function tick(){
+  requestAnimationFrame(tick);
+  if(!model) return;
+
+  const now = performance.now();
+  if(now - lastTs < 320) return;
+  lastTs = now;
+
+  if(video.readyState < 2) return;
+
+  try{
+    const preds = await model.detect(video, 20);
+    const filtered = preds.filter(p => p.score >= 0.55 && p.bbox[2] * p.bbox[3] >= 1400);
+    lastPreds = filtered;
+
+    setStatus(filtered.length ? `Rilevati: ${filtered.length} · Tocca un riquadro` : 'Nessun oggetto rilevato (ancora)…');
+    draw(filtered);
+    hintEl.style.display = filtered.length ? 'none' : 'flex';
+  }catch(e){
+    console.error(e);
+    setStatus('Errore inference (ricarica)');
+  }
+}
+
+(async function main(){
+  const ok = await startCamera();
+  if(!ok) return;
+
+  setStatus('Carico modello ML…');
+  try{
+    model = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+    setStatus('Modello pronto');
+    tick();
+  }catch(e){
+    console.error(e);
+    setStatus('Impossibile caricare modello');
+    hintEl.innerHTML = '<div style="font-size:18px;line-height:1">⚠️</div><div><b>Modello non caricato</b><div style="margin-top:6px;color:rgba(255,255,255,.62)">Controlla connessione / adblock / ricarica.</div></div>';
+  }
+})();
+</script>
+</body>
+</html>
