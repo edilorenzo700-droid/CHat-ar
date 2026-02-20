@@ -1,110 +1,150 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-  <meta name="theme-color" content="#071325" />
-  <title>MathAR — Coniche 3D</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+  <meta name="theme-color" content="#0b1220"/>
+  <title>MathAR — Coniche interattive</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     :root{
       --bg0:#050a14; --bg1:#071325;
-      --c0:#7dd3ff; --c1:#4aa3ff;
-      --glass: rgba(8, 18, 38, .55);
-      --border: rgba(125, 211, 255, .22);
-      --txt: rgba(255,255,255,.92);
-      --dim: rgba(255,255,255,.62);
-      --radius: 22px;
+      --ink: rgba(255,255,255,.92);
+      --sub: rgba(255,255,255,.62);
+      --line: rgba(255,255,255,.10);
+      --blue:#2f6bff;
+      --blue2:#56b3ff;
+
+      /* Liquid glass (neutral + blue) */
+      --glass: rgba(22, 26, 36, .40);
+      --glass2: rgba(255,255,255,.12);
+      --glass3: rgba(255,255,255,.08);
+      --shadow: 0 28px 70px rgba(0,0,0,.55);
+      --shadow2: 0 10px 30px rgba(0,0,0,.35);
+      --r: 22px;
       --safeTop: env(safe-area-inset-top, 0px);
       --safeBottom: env(safe-area-inset-bottom, 0px);
     }
     *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-    html,body{height:100%; overflow:hidden; background: linear-gradient(180deg, var(--bg1), var(--bg0));
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--txt)}
+    html,body{height:100%; overflow:hidden; background: radial-gradient(900px 600px at 70% 10%, rgba(86,179,255,.18), transparent 60%),
+                                         radial-gradient(900px 600px at 10% 90%, rgba(47,107,255,.14), transparent 60%),
+                                         linear-gradient(180deg, var(--bg1), var(--bg0));
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
     #c{position:fixed; inset:0}
     .topbar{
-      position:fixed; top:0; left:0; right:0; z-index:10;
+      position:fixed; top:0; left:0; right:0; z-index:20;
       padding-top: calc(var(--safeTop) + 12px);
       padding-bottom: 12px;
       padding-left: 14px; padding-right: 14px;
       display:flex; align-items:center; justify-content:space-between; gap:10px;
-      background: linear-gradient(180deg, rgba(8,18,38,.78), rgba(8,18,38,.28));
-      backdrop-filter: blur(22px) saturate(155%);
-      -webkit-backdrop-filter: blur(22px) saturate(155%);
-      border-bottom: 1px solid rgba(125,211,255,.14);
+      background: linear-gradient(180deg, rgba(10,18,36,.74), rgba(10,18,36,.22));
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(22px) saturate(145%);
+      -webkit-backdrop-filter: blur(22px) saturate(145%);
     }
     .btn{
-      display:inline-flex;align-items:center;gap:10px;
-      padding:10px 12px;border-radius:999px;
-      background: rgba(255,255,255,.07);
-      border: 1px solid rgba(255,255,255,.10);
-      color: rgba(255,255,255,.86);
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 12px; border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.88);
       text-decoration:none;
-      font-size:13px;font-weight:700;
+      font-size:13px; font-weight:800;
       user-select:none;
     }
     .btn:active{transform: scale(.98)}
     .titlebox{flex:1; text-align:center}
-    .title{font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--txt)}
-    .sub{margin-top:2px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(125,211,255,.86)}
+    .title{font-size:14px;font-weight:900;letter-spacing:-.02em}
+    .sub{margin-top:2px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(86,179,255,.86)}
     .chip{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:10px 12px;border-radius:999px;
-      background: rgba(125,211,255,.10);
-      border: 1px solid rgba(125,211,255,.18);
-      color: rgba(125,211,255,.95);
-      font-size:12px;font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius: 999px;
+      background: rgba(86,179,255,.10);
+      border: 1px solid rgba(86,179,255,.16);
+      color: rgba(255,255,255,.84);
+      font-size:12px; font-weight:900; letter-spacing:.10em; text-transform:uppercase;
+      box-shadow: var(--shadow2);
     }
 
+    /* Glass panels */
     .dock{
       position:fixed; left:50%; transform: translateX(-50%);
       bottom: calc(var(--safeBottom) + 14px);
-      width: min(880px, calc(100% - 22px));
-      z-index:12;
+      width: min(980px, calc(100% - 22px));
+      z-index:30;
       display:grid; gap:12px;
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: 1.2fr .9fr;
+      align-items:end;
     }
-    @media (max-width: 860px){ .dock{grid-template-columns:1fr} }
-
-    .card{
-      border-radius: var(--radius);
-      background: rgba(8,18,38,.60);
-      border:1px solid rgba(125,211,255,.16);
-      backdrop-filter: blur(26px) saturate(165%);
-      -webkit-backdrop-filter: blur(26px) saturate(165%);
-      box-shadow: 0 28px 64px rgba(0,0,0,.52);
+    @media (max-width: 920px){ .dock{grid-template-columns:1fr} }
+    .glass{
+      border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(26px) saturate(155%);
+      -webkit-backdrop-filter: blur(26px) saturate(155%);
       overflow:hidden;
     }
     .hd{
       padding: 14px 14px 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-      border-bottom:1px solid rgba(125,211,255,.12);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
     }
-    .k{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(125,211,255,.88)}
-    .h{margin-top:6px;font-size:16px;font-weight:900;letter-spacing:-.02em;color:var(--txt);line-height:1.15}
+    .k{font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:rgba(86,179,255,.86)}
+    .h{margin-top:6px;font-size:16px;font-weight:900;letter-spacing:-.02em;line-height:1.15}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      font-size:11px; font-weight:900; letter-spacing:.12em; text-transform:uppercase;
+      color: rgba(255,255,255,.72);
+      white-space:nowrap;
+    }
     .bd{padding: 14px; display:grid; gap:12px}
     .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    .row{display:grid; gap:8px}
-    .lbl{font-size:12px;color:rgba(255,255,255,.72); font-weight:700}
+    @media (max-width: 520px){ .grid2{grid-template-columns:1fr} }
+
+    .modeRow{display:flex; gap:10px; flex-wrap:wrap}
+    .modeBtn{
+      flex:1;
+      min-width: 150px;
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:12px 12px; border-radius: 16px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.84);
+      font-size:12px; font-weight:900; letter-spacing:.06em; text-transform:uppercase;
+      user-select:none;
+    }
+    .modeBtn.active{
+      background: rgba(86,179,255,.14);
+      border-color: rgba(86,179,255,.22);
+      box-shadow: 0 14px 34px rgba(0,0,0,.35);
+    }
+    .lbl{font-size:12px;color:rgba(255,255,255,.72); font-weight:800}
     input[type=range]{width:100%}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:999px;
+
+    .toggle{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 12px; border-radius: 16px;
       background: rgba(255,255,255,.06);
       border: 1px solid rgba(255,255,255,.10);
-      font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-      color: rgba(255,255,255,.74);
+      font-size:12px; font-weight:900;
+      color: rgba(255,255,255,.80);
     }
+    .toggle input{transform: scale(1.15)}
     .formula{
       border-radius: 18px;
       padding: 14px;
-      background: rgba(125,211,255,.10);
-      border: 1px solid rgba(125,211,255,.22);
+      background: rgba(86,179,255,.10);
+      border: 1px solid rgba(86,179,255,.20);
     }
     .fx{
       font-family: ui-serif, Georgia, "Times New Roman", serif;
@@ -113,18 +153,26 @@
       color: rgba(255,255,255,.94);
       letter-spacing: .03em;
     }
-    .meta{margin-top:8px;font-size:12px;color:rgba(255,255,255,.60);line-height:1.55}
+    .meta{margin-top:8px;font-size:12px;color:rgba(255,255,255,.62);line-height:1.55}
     .tagRow{display:flex;gap:10px;flex-wrap:wrap}
 
-    .toggle{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:10px 12px;border-radius:14px;
-      background: rgba(255,255,255,.06);
+    /* small floating coachmark */
+    .coach{
+      position:fixed; left:50%; transform: translateX(-50%);
+      top: calc(var(--safeTop) + 74px);
+      z-index:25;
+      padding:10px 12px; border-radius:999px;
+      background: rgba(10,18,36,.55);
       border: 1px solid rgba(255,255,255,.10);
-      color: rgba(255,255,255,.84);
-      font-size:12px;font-weight:800;
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      color: rgba(255,255,255,.78);
+      font-size:12px; font-weight:800;
+      box-shadow: var(--shadow2);
+      max-width: calc(100% - 22px);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      pointer-events:none;
     }
-    .toggle input{transform: scale(1.1)}
   </style>
 </head>
 
@@ -134,64 +182,61 @@
   <div class="topbar">
     <a class="btn" href="../">← Indietro</a>
     <div class="titlebox">
-      <div class="title">Coniche 3D — Intersezione reale</div>
-      <div class="sub">Piano + doppio cono → ellisse/parabola/iperbole</div>
+      <div class="title">Spazio Coniche — Tronco di cono</div>
+      <div class="sub">Drag per ruotare/spostare il piano · pinch per zoom</div>
     </div>
     <div class="chip">Demo 02</div>
   </div>
 
+  <div class="coach" id="coach">Modalità: RUOTA PIANO · trascina sullo schermo</div>
+
   <div class="dock">
-    <div class="card">
+    <div class="glass">
       <div class="hd">
         <div>
-          <div class="k">Parametri geometrici</div>
-          <div class="h">Manipola il piano secante</div>
+          <div class="k">Interazione</div>
+          <div class="h">Controllo intuitivo del piano secante</div>
         </div>
         <div class="pill" id="typePill">—</div>
       </div>
       <div class="bd">
-        <div class="grid2">
-          <div class="row">
-            <div class="lbl">Tilt X (°)</div>
-            <input id="tiltX" type="range" min="-70" max="70" value="12" />
-          </div>
-          <div class="row">
-            <div class="lbl">Tilt Z (°)</div>
-            <input id="tiltZ" type="range" min="-180" max="180" value="0" />
-          </div>
+        <div class="modeRow">
+          <button class="modeBtn active" id="modeRotate" type="button">⟲ Ruota piano</button>
+          <button class="modeBtn" id="modeMove" type="button">⇅ Sposta piano</button>
         </div>
+
         <div class="grid2">
-          <div class="row">
-            <div class="lbl">Offset d</div>
-            <input id="offset" type="range" min="0.2" max="2.0" step="0.01" value="0.95" />
-          </div>
           <div class="row">
             <div class="lbl">Apertura cono k (y = ±k·r)</div>
-            <input id="k" type="range" min="0.4" max="1.8" step="0.01" value="0.95" />
+            <input id="k" type="range" min="0.50" max="1.60" step="0.01" value="0.95"/>
+          </div>
+          <div class="row">
+            <div class="lbl">Offset d (distanza del piano dall’origine)</div>
+            <input id="offset" type="range" min="0.25" max="2.20" step="0.01" value="0.95"/>
           </div>
         </div>
 
         <div class="toggle">
-          <div>Mostra griglia / assi</div>
-          <input id="grid" type="checkbox" checked />
+          <div>Mostra assi e griglia</div>
+          <input id="grid" type="checkbox" checked/>
         </div>
         <div class="toggle">
           <div>Calcola entrambe le nappes</div>
-          <input id="both" type="checkbox" checked />
+          <input id="both" type="checkbox" checked/>
         </div>
 
         <div class="meta">
-          Modello: cono doppio <b>y = ±k·√(x²+z²)</b> e piano <b>a·x + b·y + c·z = d</b>.
-          Per ogni angolo φ calcoliamo <b>r = d / (a cosφ + c sinφ ± b k)</b>.
+          Qui l’utente controlla davvero il piano: non “scene finta”. La curva è calcolata dal modello
+          del doppio cono e viene <b>clippata</b> al tronco visibile per coerenza visiva.
         </div>
       </div>
     </div>
 
-    <div class="card">
+    <div class="glass">
       <div class="hd">
         <div>
-          <div class="k">Teoria rapida</div>
-          <div class="h">Equazioni e lettura</div>
+          <div class="k">Finestre didattiche</div>
+          <div class="h">Definizione · equazioni · parametri</div>
         </div>
       </div>
       <div class="bd">
@@ -201,7 +246,10 @@
         </div>
         <div class="tagRow" id="tags"></div>
         <div class="meta">
-          Suggerimento: quando il piano è quasi parallelo a una generatrice → parabola. Se interseca entrambe le nappes → iperbole.
+          Suggerimenti rapidi:
+          <br>• <b>Ellisse</b>: piano taglia una sola nappe → curva chiusa.
+          <br>• <b>Parabola</b>: piano quasi parallelo a una generatrice.
+          <br>• <b>Iperbole</b>: piano interseca entrambe le nappes → due rami.
         </div>
       </div>
     </div>
@@ -212,29 +260,31 @@ import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
 const canvas = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight, false);
 renderer.setClearColor(0x000000, 0);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x061024, 0.08);
+scene.fog = new THREE.FogExp2(0x061024, 0.085);
 
 const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.01, 100);
-camera.position.set(3.2, 2.4, 4.6);
+camera.position.set(3.2, 2.25, 4.8);
 
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
-controls.minDistance = 2.3;
+controls.minDistance = 2.2;
 controls.maxDistance = 10;
-controls.target.set(0, 0.6, 0);
+controls.target.set(0, 0.55, 0);
 
-scene.add(new THREE.AmbientLight(0x9ad8ff, 0.6));
+// lighting (vision-ish)
+scene.add(new THREE.AmbientLight(0x9ad8ff, 0.62));
 const dir = new THREE.DirectionalLight(0xffffff, 1.0);
 dir.position.set(2.5, 5, 2.2);
 scene.add(dir);
 
+// helpers
 const axes = new THREE.AxesHelper(2.0);
 axes.material.transparent = true;
 axes.material.opacity = 0.25;
@@ -249,57 +299,82 @@ helperGroup.add(axes);
 helperGroup.add(gridHelper);
 scene.add(helperGroup);
 
-// Liquid cones
+// Stars backdrop
+const stars = new THREE.BufferGeometry();
+const starCount = 900;
+const pos = new Float32Array(starCount*3);
+for(let i=0;i<starCount;i++){
+  pos[i*3+0] = (Math.random()-0.5)*40;
+  pos[i*3+1] = (Math.random()-0.1)*22;
+  pos[i*3+2] = (Math.random()-0.5)*40;
+}
+stars.setAttribute('position', new THREE.BufferAttribute(pos,3));
+const starMat = new THREE.PointsMaterial({ color: 0x7dd3ff, size: 0.02, transparent:true, opacity:0.35 });
+const starPts = new THREE.Points(stars, starMat);
+scene.add(starPts);
+
+// Liquid materials
 const coneMat = new THREE.MeshPhysicalMaterial({
   color: new THREE.Color(0x2a7cff),
-  metalness: 0.25,
-  roughness: 0.10,
-  transmission: 0.65,
-  thickness: 0.8,
+  metalness: 0.24,
+  roughness: 0.12,
+  transmission: 0.70,
+  thickness: 0.9,
   transparent: true,
-  opacity: 0.55,
+  opacity: 0.52,
   ior: 1.25,
-  clearcoat: 0.8,
-  clearcoatRoughness: 0.12
-});
-
-let coneUp, coneDn;
-function rebuildCone(){
-  const k = parseFloat(document.getElementById('k').value);
-  const h = 2.4;
-  const r = h / k;
-
-  if(coneUp){ scene.remove(coneUp); coneUp.geometry.dispose(); }
-  if(coneDn){ scene.remove(coneDn); coneDn.geometry.dispose(); }
-
-  // ConeGeometry: radius, height. Oriented along +Y, apex at +Y/2 if not translated. We'll shift so apex at origin.
-  const geo = new THREE.ConeGeometry(r, h, 144, 1, true);
-  // upper nappe: apex at origin, open upwards (+Y)
-  coneUp = new THREE.Mesh(geo, coneMat);
-  coneUp.position.y = h/2;
-  scene.add(coneUp);
-
-  // lower nappe: flip and position downwards (-Y)
-  coneDn = new THREE.Mesh(geo, coneMat);
-  coneDn.rotation.x = Math.PI;
-  coneDn.position.y = -h/2;
-  scene.add(coneDn);
-}
-rebuildCone();
-
-// Plane
-const planeGeo = new THREE.PlaneGeometry(6, 6, 1, 1);
-const planeMat = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color(0xffd7b2),
-  metalness: 0.12,
-  roughness: 0.18,
-  transmission: 0.55,
-  thickness: 0.6,
-  transparent: true,
-  opacity: 0.45,
-  ior: 1.2,
+  clearcoat: 0.85,
+  clearcoatRoughness: 0.14,
   side: THREE.DoubleSide
 });
+
+const planeMat = new THREE.MeshPhysicalMaterial({
+  color: new THREE.Color(0xbfdcff),
+  metalness: 0.12,
+  roughness: 0.18,
+  transmission: 0.62,
+  thickness: 0.7,
+  transparent: true,
+  opacity: 0.38,
+  ior: 1.2,
+  clearcoat: 0.8,
+  clearcoatRoughness: 0.15,
+  side: THREE.DoubleSide
+});
+
+// Truncated cone (frustum) params (visual only)
+let yMin = 0.35;     // start from above apex to create tronco (cut tip)
+let yMax = 2.35;
+function frustumFor(sign, k){
+  const r1 = (yMin / k);
+  const r2 = (yMax / k);
+  const h = (yMax - yMin);
+  const geo = new THREE.CylinderGeometry(r2, r1, h, 144, 1, true); // top,bottom,height
+  const m = coneMat.clone();
+  const mesh = new THREE.Mesh(geo, m);
+  mesh.position.y = sign * (yMin + h/2);
+  if(sign < 0){
+    // mirror downwards
+    mesh.scale.y = -1;
+    mesh.position.y = -mesh.position.y;
+  }
+  return mesh;
+}
+
+let coneUp, coneDn;
+function rebuildCones(){
+  const k = parseFloat(document.getElementById('k').value);
+  if(coneUp){ scene.remove(coneUp); coneUp.geometry.dispose(); }
+  if(coneDn){ scene.remove(coneDn); coneDn.geometry.dispose(); }
+  coneUp = frustumFor(+1, k);
+  coneDn = frustumFor(-1, k);
+  scene.add(coneUp);
+  scene.add(coneDn);
+}
+rebuildCones();
+
+// Plane mesh
+const planeGeo = new THREE.PlaneGeometry(6, 6, 1, 1);
 const planeMesh = new THREE.Mesh(planeGeo, planeMat);
 scene.add(planeMesh);
 
@@ -316,25 +391,12 @@ function setCurve(points){
   scene.add(curveLine);
 }
 
-// Stars
-const stars = new THREE.BufferGeometry();
-const starCount = 900;
-const pos = new Float32Array(starCount*3);
-for(let i=0;i<starCount;i++){
-  pos[i*3+0] = (Math.random()-0.5)*40;
-  pos[i*3+1] = (Math.random()-0.1)*22;
-  pos[i*3+2] = (Math.random()-0.5)*40;
-}
-stars.setAttribute('position', new THREE.BufferAttribute(pos,3));
-const starMat = new THREE.PointsMaterial({ color: 0x7dd3ff, size: 0.02, transparent:true, opacity:0.35 });
-const starPts = new THREE.Points(stars, starMat);
-scene.add(starPts);
-
-// UI
-const tiltX = document.getElementById('tiltX');
-const tiltZ = document.getElementById('tiltZ');
-const offset = document.getElementById('offset');
+// UI refs
+const modeRotate = document.getElementById('modeRotate');
+const modeMove = document.getElementById('modeMove');
+const coach = document.getElementById('coach');
 const kEl = document.getElementById('k');
+const offsetEl = document.getElementById('offset');
 const gridCb = document.getElementById('grid');
 const bothCb = document.getElementById('both');
 
@@ -343,15 +405,37 @@ const eq = document.getElementById('eq');
 const eqMeta = document.getElementById('eqMeta');
 const tags = document.getElementById('tags');
 
-function deg2rad(d){ return d * Math.PI/180; }
+// Interaction state
+let mode = 'rotate'; // rotate | move
+modeRotate.addEventListener('click', ()=>{
+  mode='rotate';
+  modeRotate.classList.add('active');
+  modeMove.classList.remove('active');
+  coach.textContent = 'Modalità: RUOTA PIANO · trascina sullo schermo';
+});
+modeMove.addEventListener('click', ()=>{
+  mode='move';
+  modeMove.classList.add('active');
+  modeRotate.classList.remove('active');
+  coach.textContent = 'Modalità: SPOSTA PIANO · trascina su/giù';
+});
 
+// Plane parameters (controlled by gestures)
+let tiltX = 12 * Math.PI/180;
+let tiltZ = 0;
+
+// Helpers
+function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+
+// Plane normal from tilts
 function planeNormal(){
   const v = new THREE.Vector3(0,1,0);
-  v.applyAxisAngle(new THREE.Vector3(1,0,0), deg2rad(parseFloat(tiltX.value)));
-  v.applyAxisAngle(new THREE.Vector3(0,0,1), deg2rad(parseFloat(tiltZ.value)));
+  v.applyAxisAngle(new THREE.Vector3(1,0,0), tiltX);
+  v.applyAxisAngle(new THREE.Vector3(0,0,1), tiltZ);
   return v.normalize();
 }
 
+// Classification heuristic based on point counts
 function classifyConic(upN, dnN){
   if(upN > 90 && dnN > 90) return 'IPERBOLE';
   if(upN < 140) return 'PARABOLA';
@@ -360,37 +444,39 @@ function classifyConic(upN, dnN){
 
 function updateTheory(type, params){
   typePill.textContent = type;
-  const {a,b,c,d} = params;
+  const {a,b,c,d,k} = params;
   const fmt = (x)=> (Math.abs(x)<1e-6 ? '0' : x.toFixed(3));
   eq.textContent = `${fmt(a)}·x + ${fmt(b)}·y + ${fmt(c)}·z = ${fmt(d)}`;
   eqMeta.textContent = (type==='ELLISSE')
-    ? 'Il piano taglia una sola nappe e la curva è chiusa.'
+    ? 'Il piano taglia una sola nappe del cono: curva chiusa.'
     : (type==='PARABOLA')
       ? 'Il piano è quasi parallelo a una generatrice: curva aperta.'
       : 'Il piano interseca entrambe le nappes: due rami aperti.';
   tags.innerHTML = '';
-  const t = (label)=>{ const el=document.createElement('div'); el.className='pill'; el.textContent=label; tags.appendChild(el); };
-  t('y = ±k·r');
-  t('n·p = d');
-  if(type==='ELLISSE') t('curva chiusa');
-  if(type==='PARABOLA') t('curva aperta');
-  if(type==='IPERBOLE') t('due rami');
+  const add = (t)=>{ const el=document.createElement('div'); el.className='pill'; el.textContent=t; tags.appendChild(el); };
+  add('y = ±k·r');
+  add('r = d/(a cosφ + c sinφ ± b k)');
+  add('k = ' + k.toFixed(2));
+  add('d = ' + d.toFixed(2));
 }
 
+// Compute curve with clipping to tronco (y in [yMin,yMax] per nappe)
 function computeCurve(){
   const k = parseFloat(kEl.value);
-  const n = planeNormal(); // (a,b,c)
+  const n = planeNormal();
   const a = n.x, b = n.y, c = n.z;
-  const d = parseFloat(offset.value);
+  const d = parseFloat(offsetEl.value);
 
   // Place & orient plane: normal dot p = d
   planeMesh.position.copy(n.clone().multiplyScalar(d));
   planeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), n.clone());
 
   const steps = 720;
-  const maxR = 6.0;
-  const pts = [];
-  const pts2 = [];
+  const maxR = 10.0;
+
+  const ptsUp = [];
+  const ptsDn = [];
+
   function add(sign){
     for(let i=0;i<=steps;i++){
       const phi = (i/steps) * Math.PI * 2;
@@ -402,34 +488,79 @@ function computeCurve(){
       const x = r * Math.cos(phi);
       const z = r * Math.sin(phi);
       const y = sign * k * r;
-      (sign>0 ? pts : pts2).push(new THREE.Vector3(x,y,z));
+
+      // clip to tronco
+      const ay = Math.abs(y);
+      if(ay < yMin || ay > yMax) continue;
+
+      (sign>0 ? ptsUp : ptsDn).push(new THREE.Vector3(x,y,z));
     }
   }
+
   add(+1);
   if(bothCb.checked) add(-1);
 
-  const type = classifyConic(pts.length, pts2.length);
-  updateTheory(type, {a,b,c,d});
+  const type = classifyConic(ptsUp.length, ptsDn.length);
+  updateTheory(type, {a,b,c,d,k});
 
+  // build one polyline; separate branches with duplicate point to avoid diagonal jump
   const all = [];
-  pts.forEach(p=>all.push(p));
-  if(pts2.length){
+  ptsUp.forEach(p=>all.push(p));
+  if(ptsDn.length){
     if(all.length) all.push(all[all.length-1].clone());
-    pts2.forEach(p=>all.push(p));
+    ptsDn.forEach(p=>all.push(p));
   }
   setCurve(all.length ? all : [new THREE.Vector3(0,0,0)]);
 
-  // Visual hints: if only one nappe, fade the other
-  coneUp.material.opacity = bothCb.checked ? 0.55 : 0.55;
-  coneDn.material.opacity = bothCb.checked ? 0.55 : 0.12;
+  // Visual: fade lower cone if "both" off
+  coneDn.material.opacity = bothCb.checked ? 0.52 : 0.12;
 }
 computeCurve();
 
-[tiltX, tiltZ, offset].forEach(el=> el.addEventListener('input', computeCurve));
-kEl.addEventListener('input', ()=>{ rebuildCone(); computeCurve(); });
+// UI listeners
+kEl.addEventListener('input', ()=>{ rebuildCones(); computeCurve(); });
+offsetEl.addEventListener('input', computeCurve);
 gridCb.addEventListener('change', ()=>{ helperGroup.visible = gridCb.checked; });
 bothCb.addEventListener('change', computeCurve);
 
+// Gesture control: drag anywhere to manipulate plane
+let dragging = false;
+let lastX = 0, lastY = 0;
+
+canvas.addEventListener('pointerdown', (e)=>{
+  dragging = true;
+  lastX = e.clientX; lastY = e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+});
+
+canvas.addEventListener('pointermove', (e)=>{
+  if(!dragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+
+  const speedRot = 0.006; // rad per px
+  const speedMove = 0.004; // units per px
+
+  if(mode === 'rotate'){
+    tiltZ += dx * speedRot;
+    tiltX += dy * speedRot;
+    tiltX = clamp(tiltX, -70*Math.PI/180, 70*Math.PI/180);
+  }else{
+    const d = parseFloat(offsetEl.value);
+    const nd = clamp(d - dy * speedMove, parseFloat(offsetEl.min), parseFloat(offsetEl.max));
+    offsetEl.value = nd.toFixed(2);
+  }
+  computeCurve();
+});
+
+canvas.addEventListener('pointerup', (e)=>{
+  dragging = false;
+  try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
+});
+canvas.addEventListener('pointercancel', ()=> dragging=false);
+
+// Resize
 function onResize(){
   renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth/innerHeight;
@@ -437,6 +568,7 @@ function onResize(){
 }
 addEventListener('resize', onResize);
 
+// Animate
 function animate(){
   requestAnimationFrame(animate);
   controls.update();
