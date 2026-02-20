@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#071325" />
+  <title>MathAR — Coniche 3D</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg0:#050a14; --bg1:#071325;
+      --c0:#7dd3ff; --c1:#4aa3ff;
+      --glass: rgba(8, 18, 38, .55);
+      --border: rgba(125, 211, 255, .22);
+      --txt: rgba(255,255,255,.92);
+      --dim: rgba(255,255,255,.62);
+      --radius: 22px;
+      --safeTop: env(safe-area-inset-top, 0px);
+      --safeBottom: env(safe-area-inset-bottom, 0px);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%; overflow:hidden; background: linear-gradient(180deg, var(--bg1), var(--bg0));
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--txt)}
+    #c{position:fixed; inset:0}
+    .topbar{
+      position:fixed; top:0; left:0; right:0; z-index:10;
+      padding-top: calc(var(--safeTop) + 12px);
+      padding-bottom: 12px;
+      padding-left: 14px; padding-right: 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background: linear-gradient(180deg, rgba(8,18,38,.78), rgba(8,18,38,.28));
+      backdrop-filter: blur(22px) saturate(155%);
+      -webkit-backdrop-filter: blur(22px) saturate(155%);
+      border-bottom: 1px solid rgba(125,211,255,.14);
+    }
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:999px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.86);
+      text-decoration:none;
+      font-size:13px;font-weight:700;
+      user-select:none;
+    }
+    .btn:active{transform: scale(.98)}
+    .titlebox{flex:1; text-align:center}
+    .title{font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--txt)}
+    .sub{margin-top:2px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:rgba(125,211,255,.86)}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 12px;border-radius:999px;
+      background: rgba(125,211,255,.10);
+      border: 1px solid rgba(125,211,255,.18);
+      color: rgba(125,211,255,.95);
+      font-size:12px;font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+    }
+
+    .dock{
+      position:fixed; left:50%; transform: translateX(-50%);
+      bottom: calc(var(--safeBottom) + 14px);
+      width: min(880px, calc(100% - 22px));
+      z-index:12;
+      display:grid; gap:12px;
+      grid-template-columns: 1.2fr .8fr;
+    }
+    @media (max-width: 860px){ .dock{grid-template-columns:1fr} }
+
+    .card{
+      border-radius: var(--radius);
+      background: rgba(8,18,38,.60);
+      border:1px solid rgba(125,211,255,.16);
+      backdrop-filter: blur(26px) saturate(165%);
+      -webkit-backdrop-filter: blur(26px) saturate(165%);
+      box-shadow: 0 28px 64px rgba(0,0,0,.52);
+      overflow:hidden;
+    }
+    .hd{
+      padding: 14px 14px 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border-bottom:1px solid rgba(125,211,255,.12);
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+    }
+    .k{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(125,211,255,.88)}
+    .h{margin-top:6px;font-size:16px;font-weight:900;letter-spacing:-.02em;color:var(--txt);line-height:1.15}
+    .bd{padding: 14px; display:grid; gap:12px}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .row{display:grid; gap:8px}
+    .lbl{font-size:12px;color:rgba(255,255,255,.72); font-weight:700}
+    input[type=range]{width:100%}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+      color: rgba(255,255,255,.74);
+    }
+    .formula{
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(125,211,255,.10);
+      border: 1px solid rgba(125,211,255,.22);
+    }
+    .fx{
+      font-family: ui-serif, Georgia, "Times New Roman", serif;
+      font-size: 20px;
+      text-align:center;
+      color: rgba(255,255,255,.94);
+      letter-spacing: .03em;
+    }
+    .meta{margin-top:8px;font-size:12px;color:rgba(255,255,255,.60);line-height:1.55}
+    .tagRow{display:flex;gap:10px;flex-wrap:wrap}
+
+    .toggle{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:10px 12px;border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.84);
+      font-size:12px;font-weight:800;
+    }
+    .toggle input{transform: scale(1.1)}
+  </style>
+</head>
+
+<body>
+  <canvas id="c"></canvas>
+
+  <div class="topbar">
+    <a class="btn" href="../">← Indietro</a>
+    <div class="titlebox">
+      <div class="title">Coniche 3D — Intersezione reale</div>
+      <div class="sub">Piano + doppio cono → ellisse/parabola/iperbole</div>
+    </div>
+    <div class="chip">Demo 02</div>
+  </div>
+
+  <div class="dock">
+    <div class="card">
+      <div class="hd">
+        <div>
+          <div class="k">Parametri geometrici</div>
+          <div class="h">Manipola il piano secante</div>
+        </div>
+        <div class="pill" id="typePill">—</div>
+      </div>
+      <div class="bd">
+        <div class="grid2">
+          <div class="row">
+            <div class="lbl">Tilt X (°)</div>
+            <input id="tiltX" type="range" min="-70" max="70" value="12" />
+          </div>
+          <div class="row">
+            <div class="lbl">Tilt Z (°)</div>
+            <input id="tiltZ" type="range" min="-180" max="180" value="0" />
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="row">
+            <div class="lbl">Offset d</div>
+            <input id="offset" type="range" min="0.2" max="2.0" step="0.01" value="0.95" />
+          </div>
+          <div class="row">
+            <div class="lbl">Apertura cono k (y = ±k·r)</div>
+            <input id="k" type="range" min="0.4" max="1.8" step="0.01" value="0.95" />
+          </div>
+        </div>
+
+        <div class="toggle">
+          <div>Mostra griglia / assi</div>
+          <input id="grid" type="checkbox" checked />
+        </div>
+        <div class="toggle">
+          <div>Calcola entrambe le nappes</div>
+          <input id="both" type="checkbox" checked />
+        </div>
+
+        <div class="meta">
+          Modello: cono doppio <b>y = ±k·√(x²+z²)</b> e piano <b>a·x + b·y + c·z = d</b>.
+          Per ogni angolo φ calcoliamo <b>r = d / (a cosφ + c sinφ ± b k)</b>.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd">
+        <div>
+          <div class="k">Teoria rapida</div>
+          <div class="h">Equazioni e lettura</div>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="formula">
+          <div class="fx" id="eq">a·x + b·y + c·z = d</div>
+          <div class="meta" id="eqMeta">—</div>
+        </div>
+        <div class="tagRow" id="tags"></div>
+        <div class="meta">
+          Suggerimento: quando il piano è quasi parallelo a una generatrice → parabola. Se interseca entrambe le nappes → iperbole.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight, false);
+renderer.setClearColor(0x000000, 0);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x061024, 0.08);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.01, 100);
+camera.position.set(3.2, 2.4, 4.6);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 2.3;
+controls.maxDistance = 10;
+controls.target.set(0, 0.6, 0);
+
+scene.add(new THREE.AmbientLight(0x9ad8ff, 0.6));
+const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+dir.position.set(2.5, 5, 2.2);
+scene.add(dir);
+
+const axes = new THREE.AxesHelper(2.0);
+axes.material.transparent = true;
+axes.material.opacity = 0.25;
+
+const gridHelper = new THREE.GridHelper(10, 40, 0x2a7cff, 0x17345a);
+gridHelper.material.transparent = true;
+gridHelper.material.opacity = 0.20;
+gridHelper.position.y = -1.2;
+
+const helperGroup = new THREE.Group();
+helperGroup.add(axes);
+helperGroup.add(gridHelper);
+scene.add(helperGroup);
+
+// Liquid cones
+const coneMat = new THREE.MeshPhysicalMaterial({
+  color: new THREE.Color(0x2a7cff),
+  metalness: 0.25,
+  roughness: 0.10,
+  transmission: 0.65,
+  thickness: 0.8,
+  transparent: true,
+  opacity: 0.55,
+  ior: 1.25,
+  clearcoat: 0.8,
+  clearcoatRoughness: 0.12
+});
+
+let coneUp, coneDn;
+function rebuildCone(){
+  const k = parseFloat(document.getElementById('k').value);
+  const h = 2.4;
+  const r = h / k;
+
+  if(coneUp){ scene.remove(coneUp); coneUp.geometry.dispose(); }
+  if(coneDn){ scene.remove(coneDn); coneDn.geometry.dispose(); }
+
+  // ConeGeometry: radius, height. Oriented along +Y, apex at +Y/2 if not translated. We'll shift so apex at origin.
+  const geo = new THREE.ConeGeometry(r, h, 144, 1, true);
+  // upper nappe: apex at origin, open upwards (+Y)
+  coneUp = new THREE.Mesh(geo, coneMat);
+  coneUp.position.y = h/2;
+  scene.add(coneUp);
+
+  // lower nappe: flip and position downwards (-Y)
+  coneDn = new THREE.Mesh(geo, coneMat);
+  coneDn.rotation.x = Math.PI;
+  coneDn.position.y = -h/2;
+  scene.add(coneDn);
+}
+rebuildCone();
+
+// Plane
+const planeGeo = new THREE.PlaneGeometry(6, 6, 1, 1);
+const planeMat = new THREE.MeshPhysicalMaterial({
+  color: new THREE.Color(0xffd7b2),
+  metalness: 0.12,
+  roughness: 0.18,
+  transmission: 0.55,
+  thickness: 0.6,
+  transparent: true,
+  opacity: 0.45,
+  ior: 1.2,
+  side: THREE.DoubleSide
+});
+const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+scene.add(planeMesh);
+
+// Curve line
+let curveLine = null;
+function setCurve(points){
+  if(curveLine){
+    scene.remove(curveLine);
+    curveLine.geometry.dispose();
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({ color: 0x7dd3ff, transparent:true, opacity: 0.95 });
+  curveLine = new THREE.Line(geo, mat);
+  scene.add(curveLine);
+}
+
+// Stars
+const stars = new THREE.BufferGeometry();
+const starCount = 900;
+const pos = new Float32Array(starCount*3);
+for(let i=0;i<starCount;i++){
+  pos[i*3+0] = (Math.random()-0.5)*40;
+  pos[i*3+1] = (Math.random()-0.1)*22;
+  pos[i*3+2] = (Math.random()-0.5)*40;
+}
+stars.setAttribute('position', new THREE.BufferAttribute(pos,3));
+const starMat = new THREE.PointsMaterial({ color: 0x7dd3ff, size: 0.02, transparent:true, opacity:0.35 });
+const starPts = new THREE.Points(stars, starMat);
+scene.add(starPts);
+
+// UI
+const tiltX = document.getElementById('tiltX');
+const tiltZ = document.getElementById('tiltZ');
+const offset = document.getElementById('offset');
+const kEl = document.getElementById('k');
+const gridCb = document.getElementById('grid');
+const bothCb = document.getElementById('both');
+
+const typePill = document.getElementById('typePill');
+const eq = document.getElementById('eq');
+const eqMeta = document.getElementById('eqMeta');
+const tags = document.getElementById('tags');
+
+function deg2rad(d){ return d * Math.PI/180; }
+
+function planeNormal(){
+  const v = new THREE.Vector3(0,1,0);
+  v.applyAxisAngle(new THREE.Vector3(1,0,0), deg2rad(parseFloat(tiltX.value)));
+  v.applyAxisAngle(new THREE.Vector3(0,0,1), deg2rad(parseFloat(tiltZ.value)));
+  return v.normalize();
+}
+
+function classifyConic(upN, dnN){
+  if(upN > 90 && dnN > 90) return 'IPERBOLE';
+  if(upN < 140) return 'PARABOLA';
+  return 'ELLISSE';
+}
+
+function updateTheory(type, params){
+  typePill.textContent = type;
+  const {a,b,c,d} = params;
+  const fmt = (x)=> (Math.abs(x)<1e-6 ? '0' : x.toFixed(3));
+  eq.textContent = `${fmt(a)}·x + ${fmt(b)}·y + ${fmt(c)}·z = ${fmt(d)}`;
+  eqMeta.textContent = (type==='ELLISSE')
+    ? 'Il piano taglia una sola nappe e la curva è chiusa.'
+    : (type==='PARABOLA')
+      ? 'Il piano è quasi parallelo a una generatrice: curva aperta.'
+      : 'Il piano interseca entrambe le nappes: due rami aperti.';
+  tags.innerHTML = '';
+  const t = (label)=>{ const el=document.createElement('div'); el.className='pill'; el.textContent=label; tags.appendChild(el); };
+  t('y = ±k·r');
+  t('n·p = d');
+  if(type==='ELLISSE') t('curva chiusa');
+  if(type==='PARABOLA') t('curva aperta');
+  if(type==='IPERBOLE') t('due rami');
+}
+
+function computeCurve(){
+  const k = parseFloat(kEl.value);
+  const n = planeNormal(); // (a,b,c)
+  const a = n.x, b = n.y, c = n.z;
+  const d = parseFloat(offset.value);
+
+  // Place & orient plane: normal dot p = d
+  planeMesh.position.copy(n.clone().multiplyScalar(d));
+  planeMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), n.clone());
+
+  const steps = 720;
+  const maxR = 6.0;
+  const pts = [];
+  const pts2 = [];
+  function add(sign){
+    for(let i=0;i<=steps;i++){
+      const phi = (i/steps) * Math.PI * 2;
+      const denom = (a*Math.cos(phi) + c*Math.sin(phi) + sign*b*k);
+      if(Math.abs(denom) < 1e-3) continue;
+      const r = d / denom;
+      if(!(r>0) || !isFinite(r) || Math.abs(r) > maxR) continue;
+
+      const x = r * Math.cos(phi);
+      const z = r * Math.sin(phi);
+      const y = sign * k * r;
+      (sign>0 ? pts : pts2).push(new THREE.Vector3(x,y,z));
+    }
+  }
+  add(+1);
+  if(bothCb.checked) add(-1);
+
+  const type = classifyConic(pts.length, pts2.length);
+  updateTheory(type, {a,b,c,d});
+
+  const all = [];
+  pts.forEach(p=>all.push(p));
+  if(pts2.length){
+    if(all.length) all.push(all[all.length-1].clone());
+    pts2.forEach(p=>all.push(p));
+  }
+  setCurve(all.length ? all : [new THREE.Vector3(0,0,0)]);
+
+  // Visual hints: if only one nappe, fade the other
+  coneUp.material.opacity = bothCb.checked ? 0.55 : 0.55;
+  coneDn.material.opacity = bothCb.checked ? 0.55 : 0.12;
+}
+computeCurve();
+
+[tiltX, tiltZ, offset].forEach(el=> el.addEventListener('input', computeCurve));
+kEl.addEventListener('input', ()=>{ rebuildCone(); computeCurve(); });
+gridCb.addEventListener('change', ()=>{ helperGroup.visible = gridCb.checked; });
+bothCb.addEventListener('change', computeCurve);
+
+function onResize(){
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', onResize);
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  starPts.rotation.y += 0.0006;
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
