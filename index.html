@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#071325" />
+  <title>MathAR — Liquid Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg0:#050a14; --bg1:#071325;
+      --glass: rgba(8, 18, 38, .55);
+      --txt: rgba(255,255,255,.92);
+      --dim: rgba(255,255,255,.62);
+      --shadow: 0 24px 60px rgba(0,0,0,.45);
+      --radius: 22px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;
+      background: radial-gradient(1200px 800px at 70% 10%, rgba(122,215,255,.18), transparent 60%),
+                  radial-gradient(1200px 800px at 10% 90%, rgba(26,91,255,.15), transparent 55%),
+                  linear-gradient(180deg, var(--bg1), var(--bg0));}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--txt);
+         display:flex;align-items:center;justify-content:center;padding:28px}
+    .wrap{width:min(960px,100%);display:grid;gap:18px}
+    .top{
+      display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+      padding: 22px 22px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid rgba(125,211,255,.18);
+      backdrop-filter: blur(26px) saturate(155%);
+      -webkit-backdrop-filter: blur(26px) saturate(155%);
+      box-shadow: var(--shadow);
+      position:relative;overflow:hidden;
+    }
+    .top:before{
+      content:"";position:absolute;inset:-80px;
+      background: radial-gradient(circle at 30% 20%, rgba(125,211,255,.18), transparent 45%),
+                  radial-gradient(circle at 80% 30%, rgba(74,163,255,.14), transparent 42%),
+                  radial-gradient(circle at 55% 80%, rgba(26,91,255,.11), transparent 45%);
+      pointer-events:none;
+    }
+    .brand{position:relative; z-index:1}
+    .brand .kicker{letter-spacing:.22em;text-transform:uppercase;font-weight:700;font-size:12px;color:rgba(125,211,255,.9)}
+    .brand h1{margin-top:6px;font-size: clamp(28px,4vw,42px);letter-spacing:-.03em;line-height:1.05}
+    .brand p{margin-top:10px;color:var(--dim);max-width:48ch;line-height:1.55}
+    .pill{
+      position:relative; z-index:1;
+      align-self:flex-start;
+      display:inline-flex; gap:10px; align-items:center;
+      padding:10px 14px;border-radius:999px;
+      background: rgba(8,18,38,.45);
+      border:1px solid rgba(125,211,255,.18);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      color:rgba(255,255,255,.78);
+      font-size:13px;font-weight:600;
+      box-shadow: 0 10px 24px rgba(0,0,0,.28);
+    }
+    .dot{width:8px;height:8px;border-radius:50%;
+         background: radial-gradient(circle, #bff0ff, #4aa3ff);
+         box-shadow: 0 0 18px rgba(125,211,255,.65)}
+    .grid{display:grid;grid-template-columns: repeat(auto-fit,minmax(280px,1fr));gap:16px}
+    a.card{
+      text-decoration:none;color:inherit;
+      border-radius: var(--radius);
+      padding: 18px 18px 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.035));
+      border: 1px solid rgba(125,211,255,.16);
+      backdrop-filter: blur(24px) saturate(155%);
+      -webkit-backdrop-filter: blur(24px) saturate(155%);
+      box-shadow: var(--shadow);
+      position:relative;overflow:hidden;
+      transition: transform .18s ease, border-color .18s ease;
+      min-height: 170px;
+    }
+    a.card:hover{transform: translateY(-4px); border-color: rgba(125,211,255,.26)}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;
+      background: rgba(8,18,38,.46);
+      border:1px solid rgba(125,211,255,.16);
+      font-size:12px;font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+      color: rgba(125,211,255,.92);
+    }
+    .badge.orange{color: rgba(255,200,140,.95); border-color: rgba(255,180,120,.18)}
+    .title{margin-top:12px;font-size:18px;font-weight:800;letter-spacing:-.02em}
+    .desc{margin-top:8px;color:var(--dim);line-height:1.55;font-size:13px}
+    .cta{margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-weight:800;
+         color: rgba(125,211,255,.95);font-size:13px}
+    .cta.orange{color: rgba(255,200,140,.98)}
+    footer{margin-top:4px;color:rgba(255,255,255,.44);font-size:12px;text-align:center}
+    .hint{margin-top:6px;color:rgba(255,255,255,.42);font-size:12px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="kicker">MathAR · Liquid Lab</div>
+        <h1>Matematica e fisica<br/>nel mondo reale</h1>
+        <p>
+          Due demo: (1) riconoscimento oggetti reale con computer vision, (2) coniche
+          manipolabili con modello matematico corretto.
+        </p>
+      </div>
+      <div class="pill"><span class="dot"></span> Ottimizzato per mobile · HTTPS</div>
+    </header>
+
+    <section class="grid">
+      <a class="card" href="demo1/">
+        <div class="badge">Demo 01 · Vision AR</div>
+        <div class="title">Rileva oggetti reali → formula</div>
+        <div class="desc">
+          La camera rileva classi di oggetti (es. sedia, bottiglia, monitor, libro) e propone
+          formule/fenomeni coerenti. Tocca un riquadro per aprire la scheda.
+        </div>
+        <div class="cta">Apri demo →</div>
+      </a>
+
+      <a class="card" href="demo2/">
+        <div class="badge orange">Demo 02 · Coniche 3D</div>
+        <div class="title">Manipola piano e cono</div>
+        <div class="desc">
+          Inclina e trasla il piano: l’intersezione con il doppio cono genera
+          ellisse, parabola o iperbole. Pannelli “liquid” con teoria e parametri.
+        </div>
+        <div class="cta orange">Apri demo →</div>
+      </a>
+    </section>
+
+    <div class="hint">
+      Suggerimento: su Android usa Chrome; su iOS usa Safari. Se la fotocamera non parte,
+      controlla i permessi del sito.
+    </div>
+    <footer>© MathAR — build statico per GitHub Pages</footer>
+  </div>
+</body>
+</html>
